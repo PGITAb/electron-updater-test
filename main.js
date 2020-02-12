@@ -4,6 +4,7 @@ const { autoUpdater } = require('electron-updater');
 let mainWindow;
 
 function createWindow () {
+    console.log("Create window")
   mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
@@ -35,6 +36,7 @@ app.on('window-all-closed', function () {
 
 app.on('activate', function () {
   if (mainWindow === null) {
+      console.log("activate")
     createWindow();
     autoUpdater.checkForUpdates();
   }
