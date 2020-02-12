@@ -7,6 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron ."
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PGITAb/electron-updater-test"
+  },
   "author": "",
   "license": "ISC",
   "devDependencies": {
@@ -15,5 +19,7 @@
   },
   "dependencies": {
     "electron-updater": "^4.2.0"
-  }
+  },
+  "build": "electron-builder build --mac --win --publish never",
+  "deploy": "electron-builder build --mac --win --publish always"
 }
