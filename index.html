@@ -39,18 +39,20 @@
   </div>
   <script>
     const { ipcRenderer } = require("electron");
+    const { app, BrowserWindow, ipcMain } = require("electron");
+    const { autoUpdater } = require("electron-updater");
     const version = document.getElementById("version");
 
     ipcRenderer.send("app_version");
     ipcRenderer.on("app_version", (event, arg) => {
-        console.log("app version checked")
+      console.log("app version checked");
       ipcRenderer.removeAllListeners("app_version");
       version.innerText = "Version " + arg.version;
     });
     const notification = document.getElementById("notification");
     const message = document.getElementById("message");
     const restartButton = document.getElementById("restart-button");
-    console.log("Script is running")
+    console.log("Script is running");
     ipcRenderer.on("update_available", () => {
       console.log("Update available");
       ipcRenderer.removeAllListeners("update_available");
@@ -70,6 +72,64 @@
     }
     function restartApp() {
       ipcRenderer.send("restart_app");
+
+      let mainWindow;
+
+      function createWindow() {
+        console.log("Create window");
+        mainWindow = new BrowserWindow({
+          width: 800,
+          height: 600,
+          webPreferences: {
+            nodeIntegration: true
+          }
+        });
+        mainWindow.loadFile("index.html");
+        mainWindow.on("closed", function() {
+          mainWindow = null;
+        });
+        mainWindow.once("ready-to-show", () => {
+          console.log("ready to show");
+          autoUpdater.checkForUpdatesAndNotify();
+        });
+      }
+
+      app.on("ready", () => {
+        createWindow();
+        autoUpdater.checkForUpdates();
+        console.log("app on ready");
+      });
+
+      app.on("window-all-closed", function() {
+        if (process.platform !== "darwin") {
+          app.quit();
+        }
+      });
+
+      app.on("activate", function() {
+        if (mainWindow === null) {
+          console.log("activate");
+          createWindow();
+          autoUpdater.checkForUpdates();
+        }
+      });
+
+      autoUpdater.on("update-available", () => {
+        mainWindow.webContents.send("update_available");
+        console.log("update-available");
+      });
+      autoUpdater.on("update-downloaded", () => {
+        mainWindow.webContents.send("update_downloaded");
+        console.log("Update downloaded");
+      });
+
+      ipcMain.on("app_version", event => {
+        event.sender.send("app_version", { version: app.getVersion() });
+      });
+
+      ipcMain.on("restart_app", () => {
+        autoUpdater.quitAndInstall();
+      });
     }
   </script>
 </body>
